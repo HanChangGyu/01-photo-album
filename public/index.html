@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>내 비밀 사진첩</title></head>
+<body>
+  <h1>환영합니다!</h1>
+  <a href="/logout">로그아웃하기</a>
+
+  <h3>사진 올리기</h3>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <label>사진 설명: </label><input type="text" name="title" /><br/>
+    <label>사진 파일: </label><input type="file" name="myPhoto" /><br/>
+    <button type="submit">업로드</button>
+  </form>
+</body>
+</html>

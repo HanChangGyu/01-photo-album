@@ -53,6 +53,41 @@ app.use(session({
     },
     name: 'session-cookie', // 이름을 바꿔서 도움
 }));
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.post('/login', (req, res) => {
+    const { id, pw } = req.body;
+// 실제로는 DB 사용 해야함
+    if (id === 'myid' && pw === '1234') {
+        req.session.isLoggedIn = true;
+        req.session.userId = id;
+        
+        res.redirect('/'); // 로그인 성공 시 메인 페이지로 이동시킵니다.
+    } else {
+        res.send('아이디나 비밀번호가 틀렸습니다.') // 실패시
+    }
+});
+app.get('/logout', (req, res) => {
+    // ⭐️ 핵심: req.session.destroy()로 사물함을 비웁니다.
+    req.session.destroy((err) => {
+        if(err) {
+            return res.status(400).send('로그아웃 실패');
+        }
+        // 세션 삭제 후 로그인 페이지로 이동
+        res.redirect('/login')
+    });
+});
+app.post('/upload', upload.single('myPhoto'), (req, res) => {
+    console.log('--- 업로드된 파일 정보 ---');
+    console.log(req.file); // ⭐️ 2단계 multer가 저장한 파일 정보
+
+    console.log('--- 함께 온 텍스트 정보 ---');
+    console.log(req.body.title); // index.html 사진 설명
+
+    res.redirect('/');
+});
+
 app.listen(app.get('port'), () => {
     console.log(app.get('port'), '번 포트에서 대기 중');
 })
