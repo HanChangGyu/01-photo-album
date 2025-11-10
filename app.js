@@ -35,6 +35,14 @@ const upload = multer({
     }),
     limits: { fileSize: 5 * 1024 * 1024 }, // 4. 크기 제한
 });
+// ⭐️ 4단계 추가 '보안 요원' 미들웨어 만들기
+const isLoggedIn = (req, res, next) => {
+    if (req.session.isLoggedIn) { // 1. 사물함(session)에 'isLoggedIn' 표식이 있는지 검사
+        next(); // 2. 있으면 통과 ! -> (다음 미들웨어/라우터로 보냄)
+    } else {
+        res.redirect('/login');
+    }
+};
 
 app.use(morgan('dev'));
 app.use('/', express.static(path.join(__dirname, 'public'))); // 정적파일 요청은 효율을 위해서 굳이 뒤에까지 갈 필요 없음
@@ -78,16 +86,24 @@ app.get('/logout', (req, res) => {
         res.redirect('/login')
     });
 });
-app.post('/upload', upload.single('myPhoto'), (req, res) => {
-    console.log('--- 업로드된 파일 정보 ---');
+app.post('/upload', isLoggedIn, upload.single('myPhoto'), (req, res) => { // 보안 요원을 추가 했으니 통과한 사람만 실행 가능
     console.log(req.file); // ⭐️ 2단계 multer가 저장한 파일 정보
-
-    console.log('--- 함께 온 텍스트 정보 ---');
     console.log(req.body.title); // index.html 사진 설명
-
     res.redirect('/');
 });
+app.get('/', isLoggedIn, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'))
+});
 
+// 여기까지 오면 위에서 아무도 요청을 처리하지 않았다는 뜻 !(분실물 센터)
+app.use((req, res, next) => {
+    res.status(404).send('Not Found (페이지를 찾을 수 없습니다)');
+});
+// '위기 대응팀' (에러 처리)
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).send(err.message || '서버에서 에러가 발생했습니다.');
+});
 app.listen(app.get('port'), () => {
     console.log(app.get('port'), '번 포트에서 대기 중');
 })
